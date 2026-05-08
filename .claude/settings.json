@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl *)",
+      "Bash(npx tsc *)",
+      "Bash(ping *)",
+      "Bash(dns-sd *)",
+      "Bash(python3 *)",
+      "Bash(pip3 *)",
+      "Bash(websockets *)"
+    ]
+  }
+}
