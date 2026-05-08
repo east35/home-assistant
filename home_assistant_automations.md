@@ -383,7 +383,7 @@ mode: single
 
 Switch ON: `lounge_switch_1_button` or `lounge_switch_2_button` subtype 1 or 3
 Switch OFF: `lounge_switch_1_button` or `lounge_switch_2_button` subtype 2 or 4
-Controls: Living Room, Kitchen, Dining & Island
+Controls: Lounge Hue zone — Living Room downlights, Kitchen, Dining & Island, Hallway (Laundry + Garage) downlights. Excludes Large Reading Lamp and Red Lamp.
 
 ```yaml
 alias: Lounge - Scene Control
@@ -455,13 +455,7 @@ actions:
               - "6"
         sequence:
           - data:
-              room_prefix: living_room
-            action: script.apply_sun_scene
-          - data:
-              room_prefix: kitchen
-            action: script.apply_sun_scene
-          - data:
-              room_prefix: dining_island
+              room_prefix: lounge
             action: script.apply_sun_scene
       - conditions:
           - condition: trigger
@@ -472,10 +466,7 @@ actions:
               - "7"
         sequence:
           - target:
-              entity_id:
-                - light.living_room
-                - light.kitchen
-                - light.dining_island
+              entity_id: light.lounge
             data:
               transition: 2
             action: light.turn_off
