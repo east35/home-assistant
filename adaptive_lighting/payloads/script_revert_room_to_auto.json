@@ -1,0 +1,18 @@
+{
+  "alias": "Revert Room to Auto",
+  "description": "Clears a single room's override and re-applies the current sun state",
+  "fields": {
+    "room_prefix": {"description": "Room prefix e.g. office_j"}
+  },
+  "sequence": [
+    {
+      "action": "input_boolean.turn_off",
+      "target": {"entity_id": "input_boolean.{{ room_prefix }}_scene_override"}
+    },
+    {
+      "action": "script.apply_sun_state",
+      "data": {"room_prefix": "{{ room_prefix }}"}
+    }
+  ],
+  "mode": "single"
+}

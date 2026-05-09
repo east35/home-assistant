@@ -1,0 +1,34 @@
+cover:
+  - platform: template
+    covers:
+      garage:
+        friendly_name: "Garage Door"
+        device_class: garage
+        value_template: "{{ is_state('binary_sensor.garage', 'on') }}"
+        open_cover:
+          service: cover.open_cover
+          target:
+            entity_id: cover.athom_garage_door
+        close_cover:
+          service: cover.close_cover
+          target:
+            entity_id: cover.athom_garage_door
+        stop_cover:
+          service: cover.stop_cover
+          target:
+            entity_id: cover.athom_garage_door
+
+automation:
+  - alias: Notify if garage open after sunset
+    trigger:
+      - platform: state
+        entity_id: cover.garage
+        to: "open"
+        for: "00:05:00"
+    condition:
+      - condition: sun
+        after: sunset
+    action:
+      - service: notify.notify
+        data:
+          message: "Garage door is still open after sunset"

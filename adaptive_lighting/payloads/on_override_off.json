@@ -1,0 +1,20 @@
+{
+  "alias": "Apply sun state when override flips off",
+  "description": "When a room's override toggle is turned off, immediately apply the current sun state",
+  "mode": "parallel",
+  "max": 10,
+  "triggers": [
+    {"trigger": "state", "entity_id": "input_boolean.bedroom_scene_override",          "to": "off", "id": "bedroom"},
+    {"trigger": "state", "entity_id": "input_boolean.guest_bathroom_scene_override",   "to": "off", "id": "guest_bathroom"},
+    {"trigger": "state", "entity_id": "input_boolean.lounge_scene_override",           "to": "off", "id": "lounge"},
+    {"trigger": "state", "entity_id": "input_boolean.office_j_scene_override",         "to": "off", "id": "office_j"},
+    {"trigger": "state", "entity_id": "input_boolean.office_m_scene_override",         "to": "off", "id": "office_m"},
+    {"trigger": "state", "entity_id": "input_boolean.primary_bathroom_scene_override", "to": "off", "id": "primary_bathroom"}
+  ],
+  "actions": [
+    {
+      "action": "script.apply_sun_state",
+      "data": {"room_prefix": "{{ trigger.id }}"}
+    }
+  ]
+}

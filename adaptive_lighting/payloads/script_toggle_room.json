@@ -1,0 +1,40 @@
+{
+  "alias": "Toggle Room",
+  "description": "If room is on, freeze + turn off. If off, clear override + apply sun state.",
+  "fields": {
+    "room_prefix": {"description": "Room prefix e.g. office_j"}
+  },
+  "sequence": [
+    {
+      "if": [
+        {
+          "condition": "template",
+          "value_template": "{{ is_state('light.' ~ room_prefix, 'on') }}"
+        }
+      ],
+      "then": [
+        {
+          "action": "input_boolean.turn_on",
+          "target": {"entity_id": "input_boolean.{{ room_prefix }}_scene_override"}
+        },
+        {
+          "action": "light.turn_off",
+          "target": {"entity_id": "light.{{ room_prefix }}"},
+          "data": {"transition": 0.4}
+        }
+      ],
+      "else": [
+        {
+          "action": "input_boolean.turn_off",
+          "target": {"entity_id": "input_boolean.{{ room_prefix }}_scene_override"}
+        },
+        {
+          "action": "script.apply_sun_state",
+          "data": {"room_prefix": "{{ room_prefix }}"}
+        }
+      ]
+    }
+  ],
+  "mode": "queued",
+  "max": 10
+}

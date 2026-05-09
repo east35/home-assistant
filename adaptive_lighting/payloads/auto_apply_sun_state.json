@@ -1,0 +1,41 @@
+{
+  "alias": "Auto-apply sun state to all rooms",
+  "description": "Re-applies sun state for non-overridden rooms when sun, weather, or evening time triggers",
+  "mode": "single",
+  "triggers": [
+    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "above": 30},
+    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "below": 30},
+    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "above": 15},
+    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "below": 15},
+    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "above": 5},
+    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "below": 5},
+    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "above": -5},
+    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "below": -5},
+    {"trigger": "state", "entity_id": "weather.forecast_lullwood"},
+    {"trigger": "time", "at": "20:30:00"},
+    {"trigger": "time", "at": "22:30:00"}
+  ],
+  "actions": [
+    {
+      "repeat": {
+        "for_each": ["bedroom", "guest_bathroom", "lounge", "office_j", "office_m", "primary_bathroom"],
+        "sequence": [
+          {
+            "if": [
+              {
+                "condition": "template",
+                "value_template": "{{ is_state('input_boolean.' ~ repeat.item ~ '_scene_override', 'off') and is_state('light.' ~ repeat.item, 'on') }}"
+              }
+            ],
+            "then": [
+              {
+                "action": "script.apply_sun_state",
+                "data": {"room_prefix": "{{ repeat.item }}"}
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

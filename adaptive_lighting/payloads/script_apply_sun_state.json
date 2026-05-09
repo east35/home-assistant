@@ -1,0 +1,38 @@
+{
+  "alias": "Apply Sun State",
+  "description": "Sets brightness + color temp on light.{room_prefix} based on sun, weather, time",
+  "fields": {
+    "room_prefix": {"description": "Room prefix e.g. office_j"}
+  },
+  "sequence": [
+    {
+      "variables": {
+        "wx": "{{ states('weather.forecast_lullwood') }}",
+        "elev": "{{ state_attr('sun.sun', 'elevation') | float(0) }}",
+        "heavy": ["rainy","pouring","lightning","lightning-rainy","fog","snowy","snowy-rainy","hail"],
+        "mins": "{{ now().hour * 60 + now().minute }}"
+      }
+    },
+    {
+      "variables": {
+        "mood": "{{ 'nightlight' if mins >= 1350 else ('dim' if mins >= 1230 else ('rest' if (wx in heavy and elev > 5) else ('rest' if elev < 5 else ('energize' if elev >= 30 and wx == 'sunny' else ('cool_bright' if elev >= 30 else ('cool_bright' if elev >= 15 and wx == 'sunny' else ('read' if elev >= 15 else ('relax' if wx in ['sunny','partlycloudy'] else 'read')))))))) }}"
+      }
+    },
+    {
+      "variables": {
+        "brightness_pct": "{{ {'energize':80,'cool_bright':100,'read':80,'relax':56,'rest':56,'dim':30,'nightlight':1}[mood] }}",
+        "color_temp_kelvin": "{{ {'energize':6410,'cool_bright':4291,'read':2890,'relax':2237,'rest':2237,'dim':2000,'nightlight':2000}[mood] }}"
+      }
+    },
+    {
+      "action": "light.turn_on",
+      "target": {"entity_id": "light.{{ room_prefix }}"},
+      "data": {
+        "brightness_pct": "{{ brightness_pct | int }}",
+        "color_temp_kelvin": "{{ color_temp_kelvin | int }}",
+        "transition": 0.4
+      }
+    }
+  ],
+  "mode": "single"
+}

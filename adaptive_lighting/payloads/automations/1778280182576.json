@@ -1,0 +1,105 @@
+{
+  "alias": "Bedroom - Scene Control",
+  "triggers": [
+    {
+      "trigger": "event",
+      "event_type": "hue_event",
+      "event_data": {
+        "id": "bedroom_switch_button",
+        "type": "short_release",
+        "subtype": 1
+      },
+      "id": "0"
+    },
+    {
+      "trigger": "event",
+      "event_type": "hue_event",
+      "event_data": {
+        "id": "bedroom_switch_button",
+        "type": "short_release",
+        "subtype": 2
+      },
+      "id": "1"
+    },
+    {
+      "trigger": "event",
+      "event_type": "hue_event",
+      "event_data": {
+        "id": "bedroom_switch_button",
+        "type": "short_release",
+        "subtype": 3
+      },
+      "id": "2"
+    },
+    {
+      "trigger": "event",
+      "event_type": "hue_event",
+      "event_data": {
+        "id": "bedroom_switch_button",
+        "type": "short_release",
+        "subtype": 4
+      },
+      "id": "3"
+    }
+  ],
+  "actions": [
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": [
+                "0",
+                "2"
+              ]
+            }
+          ],
+          "sequence": [
+            {
+              "action": "input_boolean.turn_off",
+              "target": {
+                "entity_id": "input_boolean.bedroom_scene_override"
+              }
+            },
+            {
+              "action": "script.apply_sun_state",
+              "data": {
+                "room_prefix": "bedroom"
+              }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": [
+                "1",
+                "3"
+              ]
+            }
+          ],
+          "sequence": [
+            {
+              "action": "input_boolean.turn_on",
+              "target": {
+                "entity_id": "input_boolean.bedroom_scene_override"
+              }
+            },
+            {
+              "action": "light.turn_off",
+              "target": {
+                "entity_id": "light.bedroom"
+              },
+              "data": {
+                "transition": 0.4
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}

@@ -1,0 +1,18 @@
+{
+  "alias": "Lounge 6am morning",
+  "description": "Wakes lounge each morning and lets auto-sequence resume",
+  "mode": "single",
+  "triggers": [
+    {"trigger": "time", "at": "06:00:00"}
+  ],
+  "actions": [
+    {
+      "action": "input_boolean.turn_off",
+      "target": {"entity_id": "input_boolean.lounge_scene_override"}
+    },
+    {
+      "action": "script.apply_sun_state",
+      "data": {"room_prefix": "lounge"}
+    }
+  ]
+}
