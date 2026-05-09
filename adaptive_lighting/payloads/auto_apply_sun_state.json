@@ -1,19 +1,16 @@
 {
   "alias": "Auto-apply sun state to all rooms",
-  "description": "Re-applies sun state for non-overridden rooms when sun, weather, or evening time triggers",
+  "description": "Re-applies sun state for non-overridden rooms at schedule boundaries: 7am, sunrise+30, noon-30, noon+30, sunset-30, 9pm, 11pm, and weather changes",
   "mode": "single",
   "triggers": [
-    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "above": 30},
-    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "below": 30},
-    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "above": 15},
-    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "below": 15},
-    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "above": 5},
-    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "below": 5},
-    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "above": -5},
-    {"trigger": "numeric_state", "entity_id": "sun.sun", "attribute": "elevation", "below": -5},
-    {"trigger": "state", "entity_id": "weather.forecast_lullwood"},
-    {"trigger": "time", "at": "20:30:00"},
-    {"trigger": "time", "at": "22:30:00"}
+    {"trigger": "time", "at": "07:00:00"},
+    {"trigger": "sun", "event": "sunrise", "offset": "+00:30:00"},
+    {"trigger": "time", "at": "12:30:00"},
+    {"trigger": "time", "at": "14:00:00"},
+    {"trigger": "sun", "event": "sunset",  "offset": "-00:30:00"},
+    {"trigger": "time", "at": "21:00:00"},
+    {"trigger": "time", "at": "23:00:00"},
+    {"trigger": "state", "entity_id": "weather.forecast_lullwood"}
   ],
   "actions": [
     {

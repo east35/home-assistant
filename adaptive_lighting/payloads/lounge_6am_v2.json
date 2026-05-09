@@ -3,7 +3,7 @@
   "description": "Wakes lounge each morning and lets auto-sequence resume",
   "mode": "single",
   "triggers": [
-    {"trigger": "time", "at": "06:00:00"}
+    {"trigger": "time", "at": "07:00:00"}
   ],
   "actions": [
     {
