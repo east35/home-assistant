@@ -18,7 +18,7 @@ If the user picks any scene from the Hue app, Home app, dashboard, or voice assi
 | `relax`       | 56%        | 2237K  | elev 5°–15°, sunny/partlycloudy |
 | `rest`        | 56%        | 2237K  | elev < 5°, OR heavy weather |
 | `dim`         | 30%        | 2700K  | 20:30–22:30 |
-| `nightlight`  | 8%         | 2700K  | ≥ 22:30 |
+| `nightlight`  | 1%         | 2000K  | ≥ 22:30 or before sunrise+30min |
 
 Values are tuned to Hue's official scene reference. Edit them in one place: `payloads/script_apply_sun_state.json` (third `variables` block).
 
