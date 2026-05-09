@@ -8,7 +8,7 @@
     {
       "variables": {
         "now_ts":     "{{ as_timestamp(now()) }}",
-        "is_heavy":   "{{ states('weather.forecast_lullwood') in ['rainy','pouring','lightning','lightning-rainy','fog','snowy','snowy-rainy','hail'] }}",
+        "is_heavy":   "{{ (states('weather.forecast_lullwood') in ['rainy','pouring','lightning-rainy','snowy-rainy'] and is_state('binary_sensor.rachio_e3fea3_rain','on')) or states('weather.forecast_lullwood') in ['lightning','fog','hail'] }}",
         "sunrise_ts": "{{ (as_timestamp(state_attr('sun.sun','next_rising')) - 86400) if states('sun.sun') == 'above_horizon' else as_timestamp(state_attr('sun.sun','next_rising')) }}",
         "sunset_ts":  "{{ as_timestamp(state_attr('sun.sun','next_setting')) if states('sun.sun') == 'above_horizon' else (as_timestamp(state_attr('sun.sun','next_setting')) - 86400) }}",
         "noon_ts":    "{{ as_timestamp(state_attr('sun.sun','next_noon')) if (as_timestamp(state_attr('sun.sun','next_noon')) - as_timestamp(now())) < 64800 else (as_timestamp(state_attr('sun.sun','next_noon')) - 86400) }}",
