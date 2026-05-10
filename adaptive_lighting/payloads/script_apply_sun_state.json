@@ -8,7 +8,7 @@
     {
       "variables": {
         "now_ts":     "{{ as_timestamp(now()) }}",
-        "is_heavy":   "{{ (states('weather.forecast_lullwood') in ['rainy','pouring','lightning-rainy','snowy-rainy'] and is_state('binary_sensor.rachio_e3fea3_rain','on')) or states('weather.forecast_lullwood') in ['lightning','fog','hail'] }}",
+        "is_heavy":   "{{ (states('sensor.pirateweather_precip_intensity') | float(0)) > 0.02 or states('weather.pirateweather') in ['lightning','lightning-rainy','hail','pouring'] or states('weather.forecast_lullwood') in ['lightning','lightning-rainy','hail','pouring'] }}",
         "sunrise_ts": "{{ (as_timestamp(state_attr('sun.sun','next_rising')) - 86400) if states('sun.sun') == 'above_horizon' else as_timestamp(state_attr('sun.sun','next_rising')) }}",
         "sunset_ts":  "{{ as_timestamp(state_attr('sun.sun','next_setting')) if states('sun.sun') == 'above_horizon' else (as_timestamp(state_attr('sun.sun','next_setting')) - 86400) }}",
         "noon_ts":    "{{ as_timestamp(state_attr('sun.sun','next_noon')) if (as_timestamp(state_attr('sun.sun','next_noon')) - as_timestamp(now())) < 64800 else (as_timestamp(state_attr('sun.sun','next_noon')) - 86400) }}",
@@ -23,9 +23,9 @@
     },
     {
       "variables": {
-        "mood": "{{ 'nightlight' if (now_ts >= t11pm or now_ts < t7am) else 'nightlight' if (room_prefix == 'lounge' and now_ts < sr30) else ('rest' if is_heavy else 'relax') if now_ts < sr30 else ('relax' if now_ts < ss30 else 'rest') if is_heavy else 'energize' if (now_ts >= nm30 and now_ts < np30) else 'cool_bright' if now_ts < ss30 else 'relax' if now_ts < t9pm else 'rest' }}",
-        "brightness_pct":    "{{ {'energize':100,'cool_bright':100,'read':80,'relax':56,'rest':56,'dim':30,'nightlight':1}[mood] }}",
-        "color_temp_kelvin": "{{ {'energize':6410,'cool_bright':4291,'read':2890,'relax':2237,'rest':2237,'dim':2000,'nightlight':2000}[mood] }}"
+        "mood": "{{ 'nightlight' if (now_ts >= t11pm or now_ts < t7am) else 'nightlight' if (room_prefix == 'lounge' and now_ts < sr30) else ('rest' if is_heavy else 'relax') if now_ts < sr30 else ('relax' if now_ts < ss30 else 'rest') if is_heavy else 'cool_bright' if now_ts < ss30 else 'relax' if now_ts < t9pm else 'rest' }}",
+        "brightness_pct":    "{{ {'cool_bright':100,'read':80,'relax':56,'rest':56,'dim':30,'nightlight':1}[mood] }}",
+        "color_temp_kelvin": "{{ {'cool_bright':4291,'read':2890,'relax':2237,'rest':2237,'dim':2000,'nightlight':2000}[mood] }}"
       }
     },
     {

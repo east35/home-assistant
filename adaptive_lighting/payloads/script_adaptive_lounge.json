@@ -1,0 +1,15 @@
+{
+  "alias": "Adaptive: Lounge",
+  "icon": "mdi:lightbulb-auto",
+  "description": "Singular action for Lounge. Always resets the room to adaptive lighting: clears the override and applies the current sun-state mood. Idempotent \u2014 never turns lights off.",
+  "sequence": [
+    {
+      "action": "script.revert_room_to_auto",
+      "data": {
+        "room_prefix": "lounge"
+      }
+    }
+  ],
+  "mode": "queued",
+  "max": 10
+}

@@ -10,7 +10,11 @@
     {"trigger": "sun", "event": "sunset",  "offset": "-00:30:00"},
     {"trigger": "time", "at": "21:00:00"},
     {"trigger": "time", "at": "23:00:00"},
-    {"trigger": "state", "entity_id": "weather.forecast_lullwood"}
+    {"trigger": "state", "entity_id": "weather.forecast_lullwood"},
+    {"trigger": "state", "entity_id": "weather.pirateweather"},
+    {"trigger": "numeric_state", "entity_id": "sensor.pirateweather_precip_intensity", "above": 0.02},
+    {"trigger": "numeric_state", "entity_id": "sensor.pirateweather_precip_intensity", "below": 0.02},
+    {"trigger": "time_pattern", "minutes": "/15"}
   ],
   "actions": [
     {

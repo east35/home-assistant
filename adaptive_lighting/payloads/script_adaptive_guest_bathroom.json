@@ -1,0 +1,15 @@
+{
+  "alias": "Adaptive: Guest Bathroom",
+  "icon": "mdi:lightbulb-auto",
+  "description": "Singular action for Guest Bathroom. Always resets the room to adaptive lighting: clears the override and applies the current sun-state mood. Idempotent \u2014 never turns lights off.",
+  "sequence": [
+    {
+      "action": "script.revert_room_to_auto",
+      "data": {
+        "room_prefix": "guest_bathroom"
+      }
+    }
+  ],
+  "mode": "queued",
+  "max": 10
+}
