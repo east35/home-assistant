@@ -1,0 +1,97 @@
+{
+  "alias": "Presence Office J - Lights On/Off",
+  "triggers": [
+    {
+      "id": "presence_on",
+      "trigger": "state",
+      "entity_id": "binary_sensor.presence_office_j_presence",
+      "to": "on"
+    },
+    {
+      "id": "presence_off",
+      "trigger": "state",
+      "entity_id": "binary_sensor.presence_office_j_presence",
+      "to": "off",
+      "for": {
+        "seconds": 4
+      }
+    },
+    {
+      "trigger": "homeassistant",
+      "event": "start"
+    },
+    {
+      "trigger": "event",
+      "event_type": "automation_reloaded"
+    }
+  ],
+  "actions": [
+    {
+      "choose": [
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "presence_on"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "scene.turn_on",
+              "target": { "entity_id": "scene.office_j_natural_light_2" },
+              "data": { "transition": 0.4 }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "trigger",
+              "id": "presence_off"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "light.turn_off",
+              "target": { "entity_id": "light.office_j" },
+              "data": { "transition": 0.4 }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "state",
+              "entity_id": "binary_sensor.presence_office_j_presence",
+              "state": "on"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "scene.turn_on",
+              "target": { "entity_id": "scene.office_j_natural_light_2" },
+              "data": { "transition": 0.4 }
+            }
+          ]
+        },
+        {
+          "conditions": [
+            {
+              "condition": "state",
+              "entity_id": "binary_sensor.presence_office_j_presence",
+              "state": "off"
+            }
+          ],
+          "sequence": [
+            {
+              "action": "light.turn_off",
+              "target": { "entity_id": "light.office_j" },
+              "data": { "transition": 0.4 }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "single"
+}
