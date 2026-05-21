@@ -1,0 +1,303 @@
+substitutions:
+  name: yamaha-desk-controller
+  friendly_name: Yamaha Desk Controller
+  wifi: !secret wifi_ssid
+  wifi_pass: !secret wifi_password
+  ota_pass: "trustbutverifywalkingwithabigstick"
+
+### No modifications needed below here ###
+####################################################################################
+
+# Hardware: ESP32-C3 Supermini
+#   KY-040 rotary encoder: CLK -> GPIO4, DT -> GPIO5, SW -> GPIO6
+#   HX-53 IR transmitter:  DAT -> GPIO3
+#   SSD1306 0.96" OLED:    SDA -> GPIO1, SCL -> GPIO2
+#
+# Default mode: VOLUME (rotate = vol +/-)
+# Click encoder: toggle to SOURCE mode (rotate cycles inputs and fires the
+# corresponding NEC code). Click again to return to VOLUME.
+#
+# IR codes captured from the Yamaha A-S501 remote via the kitchen IR receiver
+# on 2026-05-19. All codes are standard NEC except where noted.
+#   POWER     addr=0x817E cmd=0xD52A   (system address, not the input bus)
+#   CD        addr=0x857A cmd=0xEA15
+#   PHONO     addr=0x857A cmd=0xEB14
+#   TUNER     addr=0x857A cmd=0xE916
+#   LINE1     addr=0x857A cmd=0xE619
+#   LINE2     addr=0x857A cmd=0x3EC1
+#   LINE3/A1  addr=0x857A cmd=0x3FC0
+#   OPTICAL   addr=0x857A cmd=0x2C53   (extended NEC, no inversion)
+#   COAXIAL   addr=0x857A cmd=0xE718
+#   VOLUME+   addr=0x857A cmd=0xE51A
+#   VOLUME-   addr=0x857A cmd=0xE41B
+#   MUTE      addr=0x857A cmd=0xE31C
+
+esphome:
+  name: $name
+  friendly_name: $friendly_name
+  platformio_options:
+    board_build.flash_mode: dio
+    board_build.f_cpu: 80000000L
+  name_add_mac_suffix: false
+
+wifi:
+  ssid: $wifi
+  password: $wifi_pass
+  power_save_mode: LIGHT
+  ap:
+
+captive_portal:
+
+web_server:
+  port: 80
+
+esp32:
+  board: esp32-c3-devkitm-1
+  variant: esp32c3
+  framework:
+    type: esp-idf
+
+api:
+
+ota:
+  - platform: esphome
+    password: $ota_pass
+
+logger:
+  level: INFO
+  # USB-CDC on the C3 Supermini is on GPIO18/19; leaving UART logger off the
+  # IR/encoder/I2C pins so log traffic never contends with the hardware.
+
+# --- State ---------------------------------------------------------------
+
+globals:
+  - id: ui_mode           # 0 = VOLUME, 1 = SOURCE
+    type: int
+    restore_value: true
+    initial_value: '0'
+  - id: source_index      # index into the source table below
+    type: int
+    restore_value: true
+    initial_value: '0'
+
+# Source cycle order (must stay in sync with the script below).
+# 0 CD, 1 PHONO, 2 TUNER, 3 LINE1, 4 LINE2, 5 LINE3, 6 OPTICAL, 7 COAXIAL
+
+# --- I2C + Display -------------------------------------------------------
+
+i2c:
+  sda: GPIO1
+  scl: GPIO2
+  scan: true
+  frequency: 400kHz
+
+font:
+  - file: "gfonts://Roboto"
+    id: font_mode
+    size: 18
+  - file: "gfonts://Roboto"
+    id: font_source
+    size: 28
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    address: 0x3C
+    update_interval: 100ms
+    lambda: |-
+      const char* mode = (id(ui_mode) == 0) ? "VOLUME" : "SOURCE";
+      static const char* SOURCE_NAMES[] = {
+        "CD", "PHONO", "TUNER", "LINE1", "LINE2", "LINE3", "OPTICAL", "COAXIAL"
+      };
+      int idx = id(source_index);
+      if (idx < 0) idx = 0;
+      if (idx > 7) idx = 7;
+      it.printf(0, 0, id(font_mode), "MODE: %s", mode);
+      it.printf(64, 60, id(font_source), TextAlign::BOTTOM_CENTER,
+                "%s", SOURCE_NAMES[idx]);
+
+# --- IR transmitter ------------------------------------------------------
+
+remote_transmitter:
+  pin:
+    number: GPIO3
+    inverted: true
+  carrier_duty_percent: 50%
+  id: ir_tx
+
+# --- Rotary encoder ------------------------------------------------------
+
+sensor:
+  - platform: rotary_encoder
+    id: enc
+    name: "Encoder"
+    internal: true
+    pin_a:
+      number: GPIO4
+      mode:
+        input: true
+        pullup: true
+    pin_b:
+      number: GPIO5
+      mode:
+        input: true
+        pullup: true
+    resolution: 2
+    on_clockwise:
+      - script.execute:
+          id: handle_rotation
+          direction: 1
+    on_anticlockwise:
+      - script.execute:
+          id: handle_rotation
+          direction: -1
+
+  - platform: internal_temperature
+    name: ESP Temperature
+    unit_of_measurement: °C
+    device_class: TEMPERATURE
+    update_interval: 30s
+    entity_category: "diagnostic"
+  - platform: uptime
+    name: Uptime
+    update_interval: 10s
+  - platform: wifi_signal
+    name: WiFi RSSI
+    update_interval: 30s
+    entity_category: "diagnostic"
+
+binary_sensor:
+  - platform: status
+    name: Status
+
+  - platform: gpio
+    id: enc_button
+    name: "Encoder Button"
+    internal: true
+    pin:
+      number: GPIO6
+      mode:
+        input: true
+        pullup: true
+      inverted: true
+    filters:
+      - delayed_on: 15ms
+      - delayed_off: 25ms
+    on_press:
+      - lambda: |-
+          id(ui_mode) = (id(ui_mode) == 0) ? 1 : 0;
+
+# --- Behavior scripts ----------------------------------------------------
+
+script:
+  - id: handle_rotation
+    parameters:
+      direction: int
+    mode: parallel
+    max_runs: 4
+    then:
+      - lambda: |-
+          if (id(ui_mode) == 0) {
+            // VOLUME mode -> fire vol+/vol- immediately, low latency.
+            id(send_volume).execute(direction);
+          } else {
+            // SOURCE mode -> step index and emit the matching code.
+            const int N = 8;
+            int next = (id(source_index) + direction) % N;
+            if (next < 0) next += N;
+            id(source_index) = next;
+            id(send_source).execute(next);
+          }
+
+  - id: send_volume
+    parameters:
+      direction: int
+    mode: parallel
+    max_runs: 8
+    then:
+      - if:
+          condition:
+            lambda: 'return direction > 0;'
+          then:
+            - remote_transmitter.transmit_nec:
+                address: 0x857A
+                command: 0xE51A   # VOLUME UP
+          else:
+            - remote_transmitter.transmit_nec:
+                address: 0x857A
+                command: 0xE41B   # VOLUME DOWN
+
+  - id: send_source
+    parameters:
+      idx: int
+    mode: single
+    then:
+      - lambda: |-
+          // Dispatch via the source index; each branch fires one NEC frame.
+          switch (idx) {
+            case 0: id(tx_cd).execute(); break;
+            case 1: id(tx_phono).execute(); break;
+            case 2: id(tx_tuner).execute(); break;
+            case 3: id(tx_line1).execute(); break;
+            case 4: id(tx_line2).execute(); break;
+            case 5: id(tx_line3).execute(); break;
+            case 6: id(tx_optical).execute(); break;
+            case 7: id(tx_coaxial).execute(); break;
+          }
+
+  - id: tx_cd
+    then:
+      - remote_transmitter.transmit_nec: { address: 0x857A, command: 0xEA15 }
+  - id: tx_phono
+    then:
+      - remote_transmitter.transmit_nec: { address: 0x857A, command: 0xEB14 }
+  - id: tx_tuner
+    then:
+      - remote_transmitter.transmit_nec: { address: 0x857A, command: 0xE916 }
+  - id: tx_line1
+    then:
+      - remote_transmitter.transmit_nec: { address: 0x857A, command: 0xE619 }
+  - id: tx_line2
+    then:
+      - remote_transmitter.transmit_nec: { address: 0x857A, command: 0x3EC1 }
+  - id: tx_line3
+    then:
+      - remote_transmitter.transmit_nec: { address: 0x857A, command: 0x3FC0 }
+  - id: tx_optical
+    then:
+      - remote_transmitter.transmit_nec: { address: 0x857A, command: 0x2C53 }
+  - id: tx_coaxial
+    then:
+      - remote_transmitter.transmit_nec: { address: 0x857A, command: 0xE718 }
+
+# --- Convenience HA buttons (power / mute) -------------------------------
+
+button:
+  - platform: restart
+    icon: mdi:power-cycle
+    name: "ESP Reboot"
+
+  - platform: template
+    name: "Yamaha Power"
+    icon: mdi:power
+    on_press:
+      - remote_transmitter.transmit_nec:
+          address: 0x817E
+          command: 0xD52A
+
+  - platform: template
+    name: "Yamaha Mute"
+    icon: mdi:volume-mute
+    on_press:
+      - remote_transmitter.transmit_nec:
+          address: 0x857A
+          command: 0xE31C
+
+light:
+  - platform: status_led
+    name: sys_status
+    pin:
+      number: GPIO8
+      inverted: true
+    internal: true
+    restore_mode: ALWAYS_OFF

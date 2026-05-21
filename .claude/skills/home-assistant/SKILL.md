@@ -1,4 +1,4 @@
----
+cl---
 name: home-assistant
 description: Use when working on the user's Home Assistant instance — modifying scripts, automations, scenes, dashboards, helpers, or debugging entity behavior. The user's HA repo at /Users/jimjordan/Development/home-assistant holds project-organized payloads (one directory per feature) that get pushed to the live HA via REST API. Triggers on phrases like "the lights", "scene", "automation", "binary_sensor", "cover", "Hue", a wall switch, or any HA entity ID.
 ---

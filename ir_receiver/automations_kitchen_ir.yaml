@@ -1,0 +1,102 @@
+alias: Kitchen IR Remote
+description: Routes Apple A1156 remote presses from the kitchen ESP32 IR receiver to the AVR (power, source, volume) and the iPod dock (transport) via Broadlink.
+triggers:
+  - trigger: event
+    event_type:
+      - esphome.kitchen_ir_play_pause
+      - esphome.kitchen_ir_next
+      - esphome.kitchen_ir_prev
+      - esphome.kitchen_ir_volume_up
+      - esphome.kitchen_ir_volume_down
+      - esphome.kitchen_ir_menu
+conditions:
+  # Echo guard: the Broadlink re-emits the same Apple NEC codes this ESP32
+  # listens for, which would otherwise feed back into an infinite loop. A
+  # timer is started before each transmit; while it's active we ignore the
+  # echo-prone transport events. The timer expires on its own, so the guard
+  # can never get stuck (unlike an input_boolean). Volume keys never emit
+  # IR, so they stay responsive regardless.
+  - condition: or
+    conditions:
+      - condition: state
+        entity_id: timer.kitchen_ir_echo_guard
+        state: "idle"
+      - condition: template
+        value_template: >-
+          {{ trigger.event.event_type in
+             ['esphome.kitchen_ir_volume_up', 'esphome.kitchen_ir_volume_down'] }}
+actions:
+  - choose:
+      # Menu press: pause the iPod (best-effort blind toggle) and power down the stack
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.event_type == 'esphome.kitchen_ir_menu' }}"
+        sequence:
+          - action: timer.start
+            target:
+              entity_id: timer.kitchen_ir_echo_guard
+            data:
+              duration: "00:00:01"
+          - action: remote.send_command
+            target:
+              entity_id: remote.broadlink
+            data:
+              device: ipod_dock
+              command: play_pause
+          - action: media_player.turn_off
+            target:
+              entity_id: media_player.vsx_lx305
+
+      # Play/Pause with AVR off: power up the stack and select CD
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.event_type == 'esphome.kitchen_ir_play_pause' }}"
+          - condition: state
+            entity_id: media_player.vsx_lx305
+            state: "off"
+        sequence:
+          - action: media_player.turn_on
+            target:
+              entity_id: media_player.vsx_lx305
+          - delay:
+              seconds: 2
+          - action: media_player.select_source
+            target:
+              entity_id: media_player.vsx_lx305
+            data:
+              source: CD
+
+      # Volume up / down: control the AVR directly
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.event.event_type in ['esphome.kitchen_ir_volume_up', 'esphome.kitchen_ir_volume_down'] }}"
+        sequence:
+          - action: >-
+              {{ {
+                'esphome.kitchen_ir_volume_up': 'media_player.volume_up',
+                'esphome.kitchen_ir_volume_down': 'media_player.volume_down',
+              }[trigger.event.event_type] }}
+            target:
+              entity_id: media_player.vsx_lx305
+
+    # Default: transport controls forwarded to the iPod via Broadlink
+    # (play/pause when AVR is on, plus next/prev always)
+    default:
+      - action: timer.start
+        target:
+          entity_id: timer.kitchen_ir_echo_guard
+        data:
+          duration: "00:00:01"
+      - action: remote.send_command
+        target:
+          entity_id: remote.broadlink
+        data:
+          device: ipod_dock
+          command: >-
+            {{ {
+              'esphome.kitchen_ir_play_pause': 'play_pause',
+              'esphome.kitchen_ir_next': 'next',
+              'esphome.kitchen_ir_prev': 'prev',
+            }[trigger.event.event_type] }}
+mode: parallel
+max: 20

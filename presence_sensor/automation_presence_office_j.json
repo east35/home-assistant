@@ -11,10 +11,7 @@
       "id": "presence_off",
       "trigger": "state",
       "entity_id": "binary_sensor.presence_office_j_presence",
-      "to": "off",
-      "for": {
-        "seconds": 4
-      }
+      "to": "off"
     },
     {
       "trigger": "homeassistant",
@@ -37,9 +34,9 @@
           ],
           "sequence": [
             {
-              "action": "scene.turn_on",
-              "target": { "entity_id": "scene.office_j_natural_light_2" },
-              "data": { "transition": 0.4 }
+              "action": "light.turn_on",
+              "target": { "entity_id": "light.office_j" },
+              "data": { "transition": 0 }
             }
           ]
         },
@@ -54,7 +51,7 @@
             {
               "action": "light.turn_off",
               "target": { "entity_id": "light.office_j" },
-              "data": { "transition": 0.4 }
+              "data": { "transition": 0 }
             }
           ]
         },
@@ -68,9 +65,9 @@
           ],
           "sequence": [
             {
-              "action": "scene.turn_on",
-              "target": { "entity_id": "scene.office_j_natural_light_2" },
-              "data": { "transition": 0.4 }
+              "action": "light.turn_on",
+              "target": { "entity_id": "light.office_j" },
+              "data": { "transition": 0 }
             }
           ]
         },
@@ -86,7 +83,7 @@
             {
               "action": "light.turn_off",
               "target": { "entity_id": "light.office_j" },
-              "data": { "transition": 0.4 }
+              "data": { "transition": 0 }
             }
           ]
         }

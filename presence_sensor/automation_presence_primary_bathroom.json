@@ -1,5 +1,5 @@
 {
-  "alias": "Presence Primary Bathroom - Lights On/Off",
+  "alias": "Presence Garage - Light On/Off",
   "triggers": [
     {
       "id": "presence_on",
@@ -37,9 +37,8 @@
           ],
           "sequence": [
             {
-              "action": "scene.turn_on",
-              "target": { "entity_id": "scene.lounge_natural_light" },
-              "data": { "transition": 0.4 }
+              "action": "light.turn_on",
+              "target": { "entity_id": "light.garage" }
             }
           ]
         },
@@ -53,8 +52,7 @@
           "sequence": [
             {
               "action": "light.turn_off",
-              "target": { "entity_id": "light.lounge" },
-              "data": { "transition": 0.4 }
+              "target": { "entity_id": "light.garage" }
             }
           ]
         },
@@ -68,9 +66,8 @@
           ],
           "sequence": [
             {
-              "action": "scene.turn_on",
-              "target": { "entity_id": "scene.lounge_natural_light" },
-              "data": { "transition": 0.4 }
+              "action": "light.turn_on",
+              "target": { "entity_id": "light.garage" }
             }
           ]
         },
@@ -85,8 +82,7 @@
           "sequence": [
             {
               "action": "light.turn_off",
-              "target": { "entity_id": "light.lounge" },
-              "data": { "transition": 0.4 }
+              "target": { "entity_id": "light.garage" }
             }
           ]
         }
